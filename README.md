@@ -2,7 +2,7 @@
 
 # Foxholes
 
-This is a way to try out a game sent to me by my friend DSK.
+Try out a game sent to me by my friend DSK:
 
 ![Foxhole puzzle](images/foz-puzzle.jpeg)
 
@@ -13,7 +13,7 @@ This is a way to try out a game sent to me by my friend DSK.
 
 This program is a way to test strategies.
 
-The game is the catch a fox who must between your moves. The fox moves one hole in either direction (but not past either end).
+The game is the catch a sleeping fox who wakes at night and moves to an adjacent hole. The fox moves one hole in either direction (but not past either end). You can look in one hole each day to see if you found the fox.
 
 ## Schrödinger's fox
 
@@ -22,26 +22,34 @@ The program shows a [superposition](https://en.wikipedia.org/wiki/Schr%C3%B6ding
 ## Screenshots
 
 ![](images/FH.png)
+
 Initial screen showing game controls and start of standard (5 hole) game.
 
 ![](images/FH7.png)
+
 You can change the number of foxholes to add interest.
 
 ![](images/FHstats.png)
-Choosing probabilities adds the chance that a randomly placed and moving fox is in this hole (after you tried to catch them).
+
+Showing probabilities shows the chance that a randomly placed and randomly moving fox is in this hole. The sum is the chance you didn't find the fox.
 
 ![](images/FHmove.png)
+
 You actually play the game by choosing to inspect a hole (one of the "?" buttons).
 
 The next row shows where the uncaught foxes could move to.
 
 ## What's next?
 
-If __Foxholes__ is too easy, try [Doublefox](https://alfille.github.io/doublefox.github.io/) where the fox can jump to the other side, but you get to inspect 2 holes each time.
+If __Foxholes__ is too easy, try [Doublefox](https://alfille.github.io/doublefox.github.io/) where the holes are arranged in a continuous circle.
 
 ## Platform
 
 Pure *Javascript* in any (modern) browser.
+
+The program runs locally (in your browser) so should use negligible bandwidth. No advertising.
+
+Foxholes runs from local cache, but checks (if connected) for updates. 
 
 ## Author
 
