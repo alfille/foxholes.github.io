@@ -1,5 +1,14 @@
 body {
     background: blue;
+    font-size: 4vw;
+}
+button {
+	font-size: 4vw;
+}
+input {
+	font-size: 4vw;
+	height: 4vw;
+	width: 4vw;
 }
 header {
     background: lightblue;
