@@ -1,14 +1,44 @@
+html {
+    width: 100%;
+    height: 100%;
+}
 body {
     background: blue;
-    font-size: 4vw;
+    margin: 3px;
 }
-button {
-	font-size: 4vw;
+@media (orientation: landscape) {
+    body, button {
+        font-size: 2vw;
+    }
+    caption button {
+        font-size: 1.5vw;
+    }
+    input {
+        font-size: 2vw;
+        height: 2vw;
+        width: 2vw;
+    }
 }
-input {
-	font-size: 4vw;
-	height: 4vw;
-	width: 4vw;
+@media (orientation: portrait) {
+    body, button {
+        font-size: 3vw;
+    }
+    caption button {
+        font-size: 2vw;
+    }
+    input {
+        font-size: 3vw;
+        height: 3vw;
+        width: 3vw;
+    }
+}
+input[type="radio"] {
+    color: black;
+    background-color: white;
+}
+input[type="radio"]:checked + span {
+    font-weight: bolder;
+    border: 1px solid white;
 }
 header {
     background: lightblue;
@@ -33,12 +63,62 @@ header button {
     flex-wrap: nowrap;
     justify-content: left;
 }
+#control input[type="text"] {
+    display: inline-block;
+    width: 5em;
+}
+#control ul {
+    margin-block-start: 0px;
+    margin-block-end: 3px;
+    list-style-type: none;
+    padding-inline-start: 1em;
+}
+#control li:before {
+    content: '🦊';
+    margin-left: -20px;
+    margin-right: 10px;
+}
+#holes {
+    width: 2em;
+}
+.switch {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-evenly;
+    padding: 5px;
+    background: darkblue;
+    border: 3px solid black;
+}
+.switch button {
+    background-color: #cedad3;
+}
+.switch button:hover {
+    border-color:  red;
+}
+.hidden {
+    visibility: hidden;
+}
+.round {
+    background-color: grey;
+    border-radius: 4px;
+}
+.working {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+#Ttable {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: absolute;
+    display: none;
+}
 table {
     background: lightgrey;
     width: 100%;
-}
-caption {
-    color: white;
 }
 table, th,td {
     border: 1px solid black;
@@ -46,4 +126,109 @@ table, th,td {
 }
 td {
     text-align: center;
+}
+caption {
+    color: white;
+}
+.svg {
+    background-color: blue;
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+}
+.svg_hole {
+    fill: #8cd2cd;
+}
+.svg_symbol {
+    fill: black;
+    font-size: 200px;
+    text-anchor: middle;
+}
+.svg_boundary {
+    stroke: grey;
+    stroke-width: 9;
+    fill: transparent;
+}
+.svg_hrect {
+    stroke: grey;
+    stroke-width: 9;
+    fill: lightblue;
+}
+.svg_click {
+    stroke: black;
+    stroke-width: 10;
+    fill: transparent;
+}
+.svg_arrow {
+    fill: red;
+    stroke: red;
+    stroke-width: 8;
+    visibility: visible;
+}
+#arrowhead polygon {
+    fill: red;
+}
+.old_hole {
+    fill: #FFCCFF;
+    stroke: purple;
+    stroke-width: 4;
+} 
+.old_fox {
+    fill: black;
+    font-size: 66px;
+    text-anchor: middle;
+}
+legend {
+    background-color: #038289;
+    color: white; 
+}
+.numberfield {
+    width: 3em;
+    font-weight: bold;
+}
+#svg_code {
+    background: green;
+    animation: fade 3s;
+    animation-fill-mode: forwards;
+}
+@keyframes fade {
+    from { background-color: green; }
+    to {background-color: transparent; }
+}
+#BB_history: {
+    display: inline-flex;
+    flex-direction: row;
+    margin-left: 1em;
+    margin-right: 1em;
+}
+#Hslide {
+    width: 100%;
+}
+#Hval {
+    readonly: true;
+    width: 3vw;
+}
+#upload {
+    display:none;
+}
+#loadstatus {
+    color: pink;
+}
+.backpage {
+    color: white;
+    padding: 10px;
+}
+.backpage button {
+    background-color: #cedad3;
+    border-radius: 4px;
+}
+.backpage h3 {
+    color: yellow;
+}
+.backpage a {
+    color:#ffccff;
+}
+.backpage a:hover {
+    color:#ffe6ff;
 }
