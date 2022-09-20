@@ -5,7 +5,7 @@
     4. Fall back to cache if network fails
     * */
     
-const cacheName = "foxhole";
+const cacheName = "doublefox";
 const cacheList = [
     "/",
     "/index.html",

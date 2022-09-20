@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Foxhole Puzzle</title>
+        <title>Doublefox Puzzle</title>
         <link rel="shortcut icon" type="image/png" href="images/icon.png"/>
         <link rel="stylesheet" href="styles/base.css">
         <!---
@@ -13,30 +13,150 @@
     </head>
     <body>
         <header class="header">
-            <div>
+            <div id="top">
                 <div>
-                    <a href='https://github.com/alfille/foxholes.github.io#readme' target="_blank"><img src="images/icon.png"></a>
+                    <a href='https://github.com/alfille/doublefox.github.io'><img src="images/icon.png"></a>
                 </div>
                 <div id="control">
-                    <label>Choose number of &#129418 holes: <input type="number" id="holes" min=3 max=12 step=1 value=5 onchange="changeInput()" title="Choose number of foxholes"></label>
-                    <label>Show probabilities: <input type="checkbox" id="stats" onchange="T.statchange()"></label>
+                    <B>Foxholes</B>
+                    <ul>
+                        <li id="line1"></li>
+                        <li id="line2"></li>
+                        <li id="line3"></li>
+                    </ul>
+                    <label>Show probabilities: <input type="checkbox" id="stats" onchange="TV.statchange()"></label>
                     <fieldset>
                         <legend>Status</legend>
                         <label>Foxholes raided: <input type=text size=2 readonly id="raided"></label>
                     </fieldset>
-                    <button type="button" onclick="T.start()">Reset game</button>
                 </div>
             </div>
         </header>
-        <table id="Ttable">
-            <caption>
-                Foxhole game play
-            </caption>
-            <thead>
-            </thead>
-            <tbody>
-            </tbody>
-            </table>
+        <div id="BB_table" class="switch">
+            <div>
+                <button type="button" id="Btable1" onclick="O.garden(false)" title="Table view">&nbsp;&#128196;&nbsp;</button>
+                <button type="button" id="Bgarden1" onclick="O.garden(true)" title="Garden view">&nbsp;&#127969;&nbsp;</button>
+            </div>
+            <button type="button" class="hidden">&nbsp;</button>
+            <button type="button" class="round" onclick="TV.back()" title="Undo last move">Undo</button>
+            <button type="button" class="hidden">&nbsp;</button>
+            <button type="button" class="round" onclick="O.newgame()" title="New game">New</button>
+            <button type="button" class="round" onclick="O.rules()" title="Brief game rules">Rules</button>
+            <button type="button" class="round" onclick="O.choose()" title="Choose game type...">Choose...</button>
+            <button type="button" class="round" onclick="O.layout()">Show layout</button>
+        </div>
+        <div id="BB_garden" class="switch">
+            <div>
+                <button type="button" id="Btable2" onclick="O.garden(false)" title="Table view">&nbsp;&#128196;&nbsp;</button>
+                <button type="button" id="Bgarden2" onclick="O.garden(true)" title="Garden view">&nbsp;&#127969;&nbsp;</button>
+            </div>
+            <button type="button" class="hidden">&nbsp;</button>
+            <button type="button" class="round" onclick="TV.back()" title="Undo last move">Undo</button>
+            <button type="button" class="hidden">&nbsp;</button>
+            <button type="button" class="round" onclick="O.newgame()" title="New game">New</button>
+            <button type="button" class="round" onclick="O.rules()" title="Brief game rules">Rules</button>
+            <button type="button" class="round" onclick="O.choose()" title="Choose game type, customize, or load">Game</button>
+            <button type="button" class="round" onclick="O.history()" title="Review history" id="HistoryButton">History...</button>
+        </div>
+        <div id="BB_history" class="switch">
+            <input type="text" id="Hval">
+            <button type="button" id="Hstart" class="round" onclick="GV.hstart()" title="first">&nbsp;&#x23ee;&nbsp;</button>
+            <button type="button" id="Hback" class="round" onclick="GV.hminus()" title="less recent">&nbsp;&#x23ea;&nbsp;</button>
+            <input  type="range" id="Hslide" oninput="GV.show_history()"/>
+            <button type="button" id="Hforeward" class="round" onclick="GV.hplus()" title="more recent">&nbsp;&#x23e9;&nbsp;</button>
+            <button type="button" id="Hend" class="round" onclick="GV.hend()" title="most recent">&nbsp;&#x23ed;&nbsp;</button>
+            <button type="button" class="round" onclick="GV.post_layout()" title="Return to game">&#10006;</button></button>
+        </div>
+        <div id="BB_rules" class="switch">
+            <button type="button" class="round" onclick="O.resume()" title="Return to game">Back</button>
+        </div>
+        <div id="BB_layout" class="switch">
+            <button type="button" class="round" onclick="GV.post_layout()" title="Return to game">Back</button>
+        </div>
+        <div id="BB_choose" class="switch">
+            <button type="button" class="round" onclick="O.select('custom')" title="Use custom game parameters">Start Custom Game</button>
+            <button type="button" class="round" onclick="O.file()" title="Load or write game file">File...</button>
+            <button type="button" class="round" onclick="O.resume()" title="Return to game">Back</button>
+        </div>
+        <div id="BB_file" class="switch">
+            <button type="button" class="round" onclick="O.resume()" title="Return to game">Back</button>
+        </div>
+        <div class="working">
+            <div id="Ttable">
+                <table>
+                    <caption>
+                        Doublefox game play
+                    </caption>
+                    <thead>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="svg_view" class="svg">
+            </div>
+            <div id="choose" class="backpage">
+                <fieldset>
+                    <legend>Quick choices: Standard Games</legend>
+                    <button type="button" onclick="O.select('classic')" title="Arranged in a line, one look/day, no poisoning">Classic foxholes</button>
+                    <button type="button" onclick="O.select('circle')" title="Arranged in a circle, two looks/day, no poisoning">Circle foxholes</button>
+                    <button type="button" onclick="O.select('poison')" title="Arranged in a circle, one look/day, poisoned 1 day">Poison foxholes</button>
+                    <button type="button" onclick="O.select('double')" title="Arranged in a double line, one look/day, no poisoning">Double line foxholes</button>
+                </fieldset>
+                <br><br>
+                <fieldset>
+                    <legend>Design a Custom Game</legend>
+                    <fieldset>
+                        <legend>Geometry</legend>
+                        <label>Hole arrangement: <input type="radio" name="arrange" value="grid" checked><span>Line/grid</span></label>
+                        <label><input type="radio" name="arrange" value="circle"><span>Circle</span></label>
+                        <label><input type="radio" name="arrange" value="triangle"><span>Triangle</span></label>
+                        <br>
+                        <label>Offset holes? <input type="checkbox" id="offset"></label>
+                        <br>
+                        <label>Length: <input type="number" id="length" class="numberfield" min=1 max=20 value=5></label><b><label> &times; </label></b><label>Width: <input type="number" id="width" class="numberfield" min=1 max=20 value=1></label>
+                    </fieldset>
+                    <br>
+                    <label>Inspections per day: <input type="number" class="numberfield" id="holesper" min=1 max=10 value=1></label><br>
+                    <label>Days hole is poisoned after inspection: <input type="number" id="poisoneddays" class="numberfield" min=0 max=10 value=0></label><br>
+                </fieldset>
+                <br>
+            </div>
+            <div id="file" class="backpage">
+                <fieldset>
+                    <legend>Export</legend>
+                    <button type="button"onclick="Drag.download()" title="Download current game to a JSON file">Download game to file</button><br>
+                    <input type="file" id="upload" onchange="Drag.read()">
+                    <p>Click or copy: <a id=gamelink>Link to current game</a></p>
+                </fieldset>
+                <br>
+                <fieldset>
+                    <legend>Import</legend>
+                    <button type="button"onclick="Drag.upload()" title="Load a game from a JSON file">Load from file</button><br>
+                    <p id=loadstatus>&nbsp;</p>
+                </fieldset>
+            </div>
+            <div id="rules" class="backpage">
+                <fieldset>
+                    <legend>Brief Foxhole game rules</legend>
+                    <h3>Premise</h3>
+                    A wily fox is in your garden, hiding in a fox hole.
+                    There are <input type="number" id="rlength" class="numberfield" readonly>&times;<input type="number" id="rwidth" class="numberfield" readonly> fox holes in your garden.
+                    <h3>Fox moves &#129418;</h3>
+                    Each night the fox <B>has to move</B> to an adjacent hole. It can't stay in its current hole.
+                    <h3>Your moves &#128064;</h3>
+                    Each day, you choose holes to inspect and catch the fox if it is there.
+                    You look into <input type="number" id="rholesper" class="numberfield" readonly> holes each day.
+                    <h3>Arrangement</h3>
+                    <p id="rarrange"></p>
+                    <h3>Poison &#9763;</h3>
+                    <p id="rpoison"></p>
+                    <h3>Goal</h3>
+                    Inspect holes in the right order to catch even the sneakiest fox.
+                    <br>
+               </fieldset>
+            </div>
+        </div>
         <!-- scripts -->
         <!-- application code --> <script src="js/app.js"></script>
     </body>
