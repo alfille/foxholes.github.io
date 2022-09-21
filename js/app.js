@@ -139,6 +139,7 @@ class GardenView {
         this.Y = [] ;
         this.symbol_list = [];
         this.configure();
+        this.symbol2 = this.symbol.replace(/symbol_/g, "symbol2_").replace(/svg_symbol/g,"svg_symbol2"); // for eyeballs
     }
 
     dimension_control() {
@@ -166,7 +167,9 @@ class GardenView {
     }
 
     symbolize(s) {
-        s.forEach( (ss,i) => document.getElementById("symbol_"+i).innerHTML = ss );
+        // array of 2 arrays, fills and eyeballs
+        s[0].forEach( (ss,i) => document.getElementById("symbol_"+i).innerHTML = ss );
+        s[1].forEach( (ss,i) => document.getElementById("symbol2_"+i).innerHTML = ss );
     }
 
     arrow_visibility(flist) {
@@ -181,7 +184,7 @@ class GardenView {
             G.foxes.forEach( (_,i)=>document.getElementById("upper_"+i).addEventListener('click', (e) => this.click(e.target)) );
         }
         this.dimension_control() ;
-        this.symbolize(symbol_list) ;
+        this.symbolize([symbol_list,Array(H.total).fill("")]) ;
         this.arrow_visibility(G.foxes) ;
         this.arrow_location();
         if ( G.day == 0 ) {
@@ -202,6 +205,7 @@ class GardenView {
             ${this.lower}
             ${this.allarrows}
             ${this.symbol}
+            ${this.symbol2}
             ${display_state=="game"?this.upper:""}
             Sorry, your browser does not support inline SVG.  
         </svg>` ;
@@ -215,7 +219,7 @@ class GardenView {
 
     layout() { // show layout of foxholes
         this.svg.innerHTML = this.create_svg("layout") ;
-        this.symbolize(G.foxes.map( (_,i) => i+"" ) ); // numbers not foxes
+        this.symbolize([G.foxes.map( (_,i) => i+"" ),Array(H.total).fill("")] ); // numbers not foxes
         this.arrow_location(); // yes arrows
         this.arrow_visibility(G.foxes.map(()=>true));
     }
@@ -270,13 +274,13 @@ class GardenView {
     }
 
     show_history() { // show history of foxholes
-        this.hslide.value = this.hcurrent ;
+        this.hslide.value = this.hcurrent ; // put internal day through the slider's verification
         this.hcurrent = this.hslide.value ;
         this.svg.innerHTML = this.create_svg("history") ;
         let date = this.hslide.value;
         this.hval.value=date;
-        let obMove = G.history(date);
-        this.symbolize(TV.symbols(obMove)); // numbers not foxes
+        let obMove = G.history(date); // get hole contents
+        this.symbolize(TV.symbols2(obMove)); // put hole contents
         this.arrow_location(); // yes arrows
         this.arrow_visibility(obMove.foxes);
     }
@@ -549,14 +553,33 @@ class TableView {
         // returns a symbol list
         if ( G.number == 0 && obMove.moves.length==0 ) {
             // victory
-            return obMove.foxes.map( (_,i) => i&1 ? "&#128077;" : "&#128516;" ) ;
+            return obMove.foxes.map( (_,i) => i&1 ? "&#128077;" : "&#128516;" ) ; // smile thumbs up
         } else {
-            let s = obMove.foxes.map( f => f?"&#129418;":"&nbsp;" ) ;
-            obMove.moves.forEach( m => s[m] = "&#128064;" );
-            obMove.poisoned.forEach( p => s[p] = "&#9763;" );
+            let s = obMove.foxes.map( f => f?"&#129418;":"&nbsp;" ) ; // fox or not
+            obMove.moves.forEach( m => s[m] = "&#128064;" ); // eyeballs
+            obMove.poisoned.forEach( p => s[p] = "&#9763;" ); // toxic
             return s ;
         }
-    } 
+    }
+
+    symbols2( obMove ) {
+        // Like symbols, but the move array is separate
+        // moves = list of inspection holes
+        // poisons = list of poisoned holes
+        // foxes = true/false fox occupation list
+        // returns a symbol list
+        let s2 = Array(H.total).fill("") ; // blank for eyeballs
+        
+        if ( G.number == 0 && obMove.moves.length==0 ) {
+            // victory
+            return [obMove.foxes.map( (_,i) => i&1 ? "&#128077;" : "&#128516;" ),s2] ; // smile thumbs up
+        } else {
+            let s = obMove.foxes.map( f => f?"&#129418;":"&nbsp;" ) ; // fox or not
+            obMove.moves.forEach( m => s2[m] = "&#128064;" ); // eyeballs
+            obMove.poisoned.forEach( p => s[p] = "&#9763;" ); // toxic
+            return [s,s2] ;
+        }
+    }
 
     add_history_row() { // historical row
         let prior = G.prior ;
@@ -594,10 +617,10 @@ class TableView {
 }
 
 class Game {
-	constructor() {
+    constructor() {
         this.fox_moves = [] ;
-	}
-	
+    }
+    
     poison_list(date) { // returns just the elements as an array
         return this.poison_array(date).map( (p,i) => p?i:-1 ).filter( i => i>-1 ) ;
     }
@@ -663,7 +686,7 @@ class Game {
         return this.stats_history[this.date] ;
     }
 
-    history( date ) {
+    history( date ) { // returns object with 3 arrays
         let r = {
             moves: [],
             poisoned: [],
@@ -759,14 +782,14 @@ class Game_Triangle extends Game {
 
         Game.triset() ; // set up row ends
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
-			let [ lo,hi ] = Game.trisplit( holes ) ;
-			this.fox_moves.push(
-				Game.limit_neighbors(lo,hi+1)
-					.map(l=>[l,hi])
-					.concat( Game.limit_neighbors(hi,H.xlength).map(h=>[lo,h]).filter(([ll,hh])=> ll<=hh) )
-					.map( ([ll,hh])=> Game.tricombine( ll, hh ) )
-				) ;
-		}
+            let [ lo,hi ] = Game.trisplit( holes ) ;
+            this.fox_moves.push(
+                Game.limit_neighbors(lo,hi+1)
+                    .map(l=>[l,hi])
+                    .concat( Game.limit_neighbors(hi,H.xlength).map(h=>[lo,h]).filter(([ll,hh])=> ll<=hh) )
+                    .map( ([ll,hh])=> Game.tricombine( ll, hh ) )
+                ) ;
+        }
     }
 }
 
@@ -778,13 +801,13 @@ class Game_OffsetTriangle extends Game {
 
         Game.triset() ; // set up row ends
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
-			let [ lo,hi ] = Game.trisplit( holes ) ;
-			let r = Game.limit_neighbors( lo, hi+1 ).map( l=>[l,hi] ) ; // horizontal
-			Game.limit_neighbors( hi, H.xlength ) //vertical
-				.forEach( h => Game.limit( [lo,lo+(h<hi?-1:1)], H.xlength ).map(l=>[l,h]).filter(([ll,hh])=>ll<=hh).forEach( lh => r.push( lh ) )
-				);
-			this.fox_moves.push( r.map( ([ll,hh])=> Game.tricombine( ll, hh )) );
-		}
+            let [ lo,hi ] = Game.trisplit( holes ) ;
+            let r = Game.limit_neighbors( lo, hi+1 ).map( l=>[l,hi] ) ; // horizontal
+            Game.limit_neighbors( hi, H.xlength ) //vertical
+                .forEach( h => Game.limit( [lo,lo+(h<hi?-1:1)], H.xlength ).map(l=>[l,h]).filter(([ll,hh])=>ll<=hh).forEach( lh => r.push( lh ) )
+                );
+            this.fox_moves.push( r.map( ([ll,hh])=> Game.tricombine( ll, hh )) );
+        }
     }
 }
 
@@ -794,13 +817,13 @@ class Game_Circle extends Game {
         TV = new TableView() ;
         GV = new GardenView_Circle() ;
 
-		for ( let holes = 0 ; holes<H.total ; ++holes ) {
-			let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-			this.fox_moves.push( Game.wrap_neighbors(lo,H.xlength).map(l=>[l,hi])
-				.concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
-				.map( ([ll,hh])=> Game.combine( ll, hh, H.xlength ) )
-				);
-		}
+        for ( let holes = 0 ; holes<H.total ; ++holes ) {
+            let [ lo,hi ] = Game.split( holes, H.xlength ) ;
+            this.fox_moves.push( Game.wrap_neighbors(lo,H.xlength).map(l=>[l,hi])
+                .concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
+                .map( ([ll,hh])=> Game.combine( ll, hh, H.xlength ) )
+                );
+        }
     }
 }
 
@@ -810,15 +833,15 @@ class Game_OffsetCircle extends Game {
         TV = new TableView() ;
         GV = new GardenView_OffsetCircle() ;
 
-		for ( let holes = 0 ; holes<H.total ; holes++ ) {
-			let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-			let r = Game.wrap_neighbors( lo, H.xlength ).map( l=>[l,hi] ) ; // horizontal
-			Game.limit_neighbors( hi, H.ylength ) //vertical
-				.forEach( h => [lo-(h&1),lo+1-(h&1)].forEach( l=>r.push( [Game.wrap( l, H.xlength ),h]))
-				);
-				console.log(this.fox_moves);
-			this.fox_moves.push( r.map( ([ll,hh])=> Game.combine( ll, hh, H.xlength )) ) ;
-		}
+        for ( let holes = 0 ; holes<H.total ; holes++ ) {
+            let [ lo,hi ] = Game.split( holes, H.xlength ) ;
+            let r = Game.wrap_neighbors( lo, H.xlength ).map( l=>[l,hi] ) ; // horizontal
+            Game.limit_neighbors( hi, H.ylength ) //vertical
+                .forEach( h => [lo-(h&1),lo+1-(h&1)].forEach( l=>r.push( [Game.wrap( l, H.xlength ),h]))
+                );
+                console.log(this.fox_moves);
+            this.fox_moves.push( r.map( ([ll,hh])=> Game.combine( ll, hh, H.xlength )) ) ;
+        }
     }
 }
 
@@ -829,14 +852,14 @@ class Game_Grid extends Game {
         GV = new GardenView_Grid() ;
         
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
-			let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-			this.fox_moves.push(
-				Game.limit_neighbors(lo,H.xlength)
-					.map(l=>[l,hi])
-					.concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
-					.map( ([l,h])=> Game.combine( l, h, H.xlength) )
-				) ;
-		}
+            let [ lo,hi ] = Game.split( holes, H.xlength ) ;
+            this.fox_moves.push(
+                Game.limit_neighbors(lo,H.xlength)
+                    .map(l=>[l,hi])
+                    .concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
+                    .map( ([l,h])=> Game.combine( l, h, H.xlength) )
+                ) ;
+        }
     }
 }
 
@@ -847,13 +870,13 @@ class Game_OffsetGrid extends Game {
         GV = new GardenView_OffsetGrid() ;
 
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
-			let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-			let r = Game.limit_neighbors( lo, H.xlength ).map( l=>[l,hi] ) ; // horizontal
-			Game.limit_neighbors( hi, H.ylength ) //vertical
-				.forEach( h => Game.limit( [lo-(h&1),lo+1-(h&1)], H.xlength ).forEach( l => r.push( [l,h] ) )
-				);
-			this.fox_moves.push( r.map( ([l,h])=> Game.combine( l, h, H.xlength )) );
-		}
+            let [ lo,hi ] = Game.split( holes, H.xlength ) ;
+            let r = Game.limit_neighbors( lo, H.xlength ).map( l=>[l,hi] ) ; // horizontal
+            Game.limit_neighbors( hi, H.ylength ) //vertical
+                .forEach( h => Game.limit( [lo-(h&1),lo+1-(h&1)], H.xlength ).forEach( l => r.push( [l,h] ) )
+                );
+            this.fox_moves.push( r.map( ([l,h])=> Game.combine( l, h, H.xlength )) );
+        }
     }
 }
 
@@ -1216,15 +1239,15 @@ class Drag {
         u.searchParams.forEach( (v,k) => console.log(k,v,typeof(v)) ) ;
         u.searchParams.forEach( (v,k) => obj[k] = v ) ;
         if ( 'moves' in obj ) {
-			// moves gets converted to a flat text list. -- need to reparse
-			let flat = obj.moves.split(",");
-			let arrays = [] ;
-			while ( flat.length >= H.visits ) {
-				arrays.push( [flat.slice(H.visits)] );
-				flat = flat.slice(H.visits) ;
-			}
-			obj.moves = arrays
-		}
+            // moves gets converted to a flat text list. -- need to reparse
+            let flat = obj.moves.split(",");
+            let arrays = [] ;
+            while ( flat.length >= H.visits ) {
+                arrays.push( [flat.slice(H.visits)] );
+                flat = flat.slice(H.visits) ;
+            }
+            obj.moves = arrays
+        }
         Drag.validate(obj);
     }
 }
