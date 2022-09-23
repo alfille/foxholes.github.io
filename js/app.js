@@ -272,6 +272,11 @@ class GardenView {
         this.show_history();
     }
 
+    history_slide() {
+        this.hcurrent = this.hslide.value ;
+        this.show_history()
+    }
+
     show_history() { // show history of foxholes
         this.hslide.value = this.hcurrent ; // put internal day through the slider's verification
         this.hcurrent = this.hslide.value ;
@@ -299,7 +304,6 @@ class GardenView {
 class GardenView_Triangle extends GardenView {
     configure() {
         let f = G.foxes ;
-        console.log(f);
         this.vb = { // svg viewBox dimensions
             x: -200,
             y: -250,
@@ -312,7 +316,6 @@ class GardenView_Triangle extends GardenView {
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
         this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} id=${"lower_"+i} />`)
                            .join("");
-                           console.log(this.lower);
         this.symbol     = f.map( (_,i) => `<text class="svg_symbol" x="0" y="60" id=${"symbol_"+i} ${this.transform[i]} >&nbsp;</text>`)
                            .join("");
         this.upper      = f.map( (_,i) => `<circle class="svg_click" cx="0" cy="0" r="150" ${this.transform[i]} id=${"upper_"+i}  onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`)
@@ -830,7 +833,6 @@ class Game_OffsetCircle extends Game {
             Game.limit_neighbors( hi, H.ylength ) //vertical
                 .forEach( h => [lo-(h&1),lo+1-(h&1)].forEach( l=>r.push( [Game.wrap( l, H.xlength ),h]))
                 );
-                console.log(this.fox_moves);
             this.fox_moves.push( r.map( ([ll,hh])=> Game.combine( ll, hh, H.xlength )) ) ;
         }
     }
