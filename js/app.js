@@ -139,7 +139,6 @@ class GardenView {
         this.Y = [] ;
         this.symbol_list = [];
         this.configure();
-        this.symbol2 = this.symbol.replace(/symbol_/g, "symbol2_").replace(/svg_symbol/g,"svg_symbol2"); // for eyeballs
     }
 
     dimension_control() {
@@ -167,13 +166,14 @@ class GardenView {
     }
 
     symbolize(s) {
-        // array of 2 arrays, fills and eyeballs
-        s[0].forEach( (ss,i) => document.getElementById("symbol_"+i).innerHTML = ss );
-        s[1].forEach( (ss,i) => document.getElementById("symbol2_"+i).innerHTML = ss );
+        // array of fills
+        s.forEach( (ss,i) => document.getElementById("symbol_"+i).innerHTML = ss );
     }
 
-    arrow_visibility(flist) {
-        flist.forEach( (f,i) => G.fox_moves[i].forEach( m => document.getElementById("arr"+i+"_"+m).style.visibility= f?"visible":"hidden" ));
+    arrow_visibility(flist,mlist=[]) {
+        flist
+        .map( (f,i) => f && !mlist.includes(i) )
+        .forEach( (f,i) => G.fox_moves[i].forEach( m => document.getElementById("arr"+i+"_"+m).style.visibility= f?"visible":"hidden" ));
     }
 
     control_row(symbol_list) {
@@ -184,7 +184,7 @@ class GardenView {
             G.foxes.forEach( (_,i)=>document.getElementById("upper_"+i).addEventListener('click', (e) => this.click(e.target)) );
         }
         this.dimension_control() ;
-        this.symbolize([symbol_list,Array(H.total).fill("")]) ;
+        this.symbolize(symbol_list) ;
         this.arrow_visibility(G.foxes) ;
         this.arrow_location();
         if ( G.day == 0 ) {
@@ -205,7 +205,6 @@ class GardenView {
             ${this.lower}
             ${this.allarrows}
             ${this.symbol}
-            ${this.symbol2}
             ${display_state=="game"?this.upper:""}
             Sorry, your browser does not support inline SVG.  
         </svg>` ;
@@ -219,7 +218,7 @@ class GardenView {
 
     layout() { // show layout of foxholes
         this.svg.innerHTML = this.create_svg("layout") ;
-        this.symbolize([G.foxes.map( (_,i) => i+"" ),Array(H.total).fill("")] ); // numbers not foxes
+        this.symbolize(G.foxes.map( (_,i) => i+"" )); // numbers not foxes
         this.arrow_location(); // yes arrows
         this.arrow_visibility(G.foxes.map(()=>true));
     }
@@ -280,9 +279,15 @@ class GardenView {
         let date = this.hslide.value;
         this.hval.value=date;
         let obMove = G.history(date); // get hole contents
-        this.symbolize(TV.symbols2(obMove)); // put hole contents
+        this.symbolize(TV.symbols(obMove)); // put hole contents
+        obMove.moves.forEach( (i) => {
+            let lower = document.getElementById("lower_"+i) ;
+            lower.style.fill="red";
+            lower.style.stroke="black";
+            lower.style.strokeWidth="30";
+            });
         this.arrow_location(); // yes arrows
-        this.arrow_visibility(obMove.foxes);
+        this.arrow_visibility(obMove.foxes,obMove.moves);
     }
 
     post_layout() {
@@ -294,6 +299,7 @@ class GardenView {
 class GardenView_Triangle extends GardenView {
     configure() {
         let f = G.foxes ;
+        console.log(f);
         this.vb = { // svg viewBox dimensions
             x: -200,
             y: -250,
@@ -304,8 +310,9 @@ class GardenView_Triangle extends GardenView {
         this.transform  = f.map( (_,i) => { let [l,h]=Game.trisplit(i); return `transform="translate(${l*350},${h*350})"`} ) ;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} />`)
+        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} id=${"lower_"+i} />`)
                            .join("");
+                           console.log(this.lower);
         this.symbol     = f.map( (_,i) => `<text class="svg_symbol" x="0" y="60" id=${"symbol_"+i} ${this.transform[i]} >&nbsp;</text>`)
                            .join("");
         this.upper      = f.map( (_,i) => `<circle class="svg_click" cx="0" cy="0" r="150" ${this.transform[i]} id=${"upper_"+i}  onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`)
@@ -326,11 +333,11 @@ class GardenView_OffsetTriangle extends GardenView {
         this.transform  = f.map( (_,i) => { let [ll,h]=Game.trisplit(i); let l=ll+Math.trunc((H.xlength-h-1)/2) ; return `transform="translate(${l*350+(h&1)*175},${h*303})"`} ) ;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]}/>`)
+        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} id=${"lower_"+i} />`)
                            .join("");
         this.symbol     = f.map( (_,i) => `<text class="svg_symbol" x="0" y="60" id=${"symbol_"+i} ${this.transform[i]}>&nbsp;</text>`)
                            .join("");
-        this.upper      = f.map( (_,i) => `<circle class="svg_click" cx="0" cy="0" r="150" ${this.transform[i]} id=${"upper_"+i}  onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`)
+        this.upper      = f.map( (_,i) => `<circle class="svg_click" cx="0" cy="0" r="150" ${this.transform[i]} id=${"upper_"+i} onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`)
                            .join("");
     }
 }
@@ -355,7 +362,7 @@ class GardenView_Circle extends GardenView {
         this.background = `<circle cx="0" cy="0" r="${this.total_radius-200}" class="svg_boundary" />`;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_hole" cx="0" cy="-${this.R[h]}" r="150" transform="rotate(${360*l/H.xlength})" />`;}).join("");
+        this.lower      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_hole" cx="0" cy="-${this.R[h]}" r="150" transform="rotate(${360*l/H.xlength})"  id=${"lower_"+i} />`;}).join("");
         this.symbol     = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<text class="svg_symbol" x="0" y="-${this.R[h]-60}" id=${"symbol_"+i} transform="rotate(${360*l/H.xlength})" />&nbsp;</text>`;}).join("");
         this.upper      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_click" cx="0" cy="-${this.R[h]}" r="150" id=${"upper_"+i} transform="rotate(${360*l/H.xlength})" onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`;}).join("");
     }
@@ -381,7 +388,7 @@ class GardenView_OffsetCircle extends GardenView {
         this.background = `<circle cx="0" cy="0" r="${this.R[H.ylength-1]}" class="svg_boundary" />`;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_hole" cx="0" cy="-${this.R[h]}" r="150" transform="rotate(${360*(l+.5*(h&1))/H.xlength})"/>`;}).join("");
+        this.lower      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_hole" cx="0" cy="-${this.R[h]}" r="150" transform="rotate(${360*(l+.5*(h&1))/H.xlength})" id=${"lower_"+i} />`;}).join("");
         this.symbol     = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<text class="svg_symbol" x="0" y="-${this.R[h]-60}" id=${"symbol_"+i} transform="rotate(${360*(l+.5*(h&1))/H.xlength})"/>&nbsp;</text>`;}).join("");
         this.upper      = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `<circle class="svg_click" cx="0" cy="-${this.R[h]}" r="150" id=${"upper_"+i} transform="rotate(${360*(l+.5*(h&1))/H.xlength})" onmouseover="this.style.stroke='red'" onmouseout="this.style.stroke='black'"/>`;}).join("");
     }
@@ -400,7 +407,7 @@ class GardenView_Grid extends GardenView {
         this.transform  = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `transform="translate(${l*350},${h*350})"`} ) ;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} />`)
+        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} id=${"lower_"+i} />`)
                            .join("");
         this.symbol     = f.map( (_,i) => `<text class="svg_symbol" x="0" y="60" id=${"symbol_"+i} ${this.transform[i]} >&nbsp;</text>`)
                            .join("");
@@ -422,7 +429,7 @@ class GardenView_OffsetGrid extends GardenView {
         this.transform  = f.map( (_,i) => { let [l,h]=Game.split(i,H.xlength); return `transform="translate(${l*350+(h&1)*175},${h*303})"`} ) ;
 
         // Foxholes lower (has background) symbol (holds inhabitant) upper (for click and border)
-        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]}/>`)
+        this.lower      = f.map( (_,i) => `<circle class="svg_hole" cx="0" cy="0" r="150" ${this.transform[i]} id=${"lower_"+i} />`)
                            .join("");
         this.symbol     = f.map( (_,i) => `<text class="svg_symbol" x="0" y="60" id=${"symbol_"+i} ${this.transform[i]}>&nbsp;</text>`)
                            .join("");
@@ -478,9 +485,11 @@ class TableView {
     }
 
     check() {
-        let h = [...this.tbody.lastElementChild.querySelectorAll("input")]
+        let inp = [...this.tbody.lastElementChild.querySelectorAll("input")] ;
+        let h = inp
             .filter( c=>c.checked )
             .map(c=>parseInt(c.getAttribute("data-n")));
+        inp.forEach( d => d.parentNode.style.background = (d.checked) ? "red" : "inherit" ); 
         if ( h.length == H.visits ) {
             this.move(h) ;
         }
@@ -556,28 +565,9 @@ class TableView {
             return obMove.foxes.map( (_,i) => i&1 ? "&#128077;" : "&#128516;" ) ; // smile thumbs up
         } else {
             let s = obMove.foxes.map( f => f?"&#129418;":"&nbsp;" ) ; // fox or not
-            obMove.moves.forEach( m => s[m] = "&#128064;" ); // eyeballs
+            //obMove.moves.forEach( m => s[m] = "&#128064;" ); // eyeballs
             obMove.poisoned.forEach( p => s[p] = "&#9763;" ); // toxic
             return s ;
-        }
-    }
-
-    symbols2( obMove ) {
-        // Like symbols, but the move array is separate
-        // moves = list of inspection holes
-        // poisons = list of poisoned holes
-        // foxes = true/false fox occupation list
-        // returns a symbol list
-        let s2 = Array(H.total).fill("") ; // blank for eyeballs
-        
-        if ( G.number == 0 && obMove.moves.length==0 ) {
-            // victory
-            return [obMove.foxes.map( (_,i) => i&1 ? "&#128077;" : "&#128516;" ),s2] ; // smile thumbs up
-        } else {
-            let s = obMove.foxes.map( f => f?"&#129418;":"&nbsp;" ) ; // fox or not
-            obMove.moves.forEach( m => s2[m] = "&#128064;" ); // eyeballs
-            obMove.poisoned.forEach( p => s[p] = "&#9763;" ); // toxic
-            return [s,s2] ;
         }
     }
 
@@ -591,6 +581,7 @@ class TableView {
                 d.innerHTML = `Day ${G.day-1}`;
             } else {
                 d.innerHTML = s[i-1] ;
+                d.style.background = (prior.moves.includes(i-1)) ? "red" : "inherit" ;
             }
             r.appendChild(d);
         }
@@ -688,9 +679,9 @@ class Game {
 
     history( date ) { // returns object with 3 arrays
         let r = {
-            moves: [],
-            poisoned: [],
-            foxes: Array(H.total).fill(true),
+            moves: [], // list of holes
+            poisoned: [], // list of holes
+            foxes: Array(H.total).fill(true), // true/false for each hole
         };
         if ( date>=0 && date<=this.date) {
             r.moves = this.inspections[date]||[];

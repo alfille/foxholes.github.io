@@ -145,11 +145,6 @@ caption {
     font-size: 200px;
     text-anchor: middle;
 }
-.svg_symbol2 {
-    fill: black;
-    font-size: 200px;
-    text-anchor: middle;
-}
 .svg_boundary {
     stroke: grey;
     stroke-width: 9;
