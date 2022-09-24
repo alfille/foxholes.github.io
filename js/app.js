@@ -945,6 +945,14 @@ class Overlay {
         H.ylength = 2;
     }
 
+    triangle() {
+        H.geometry = "triangle";
+        H.visits = 2;
+        H.poison_days = 0;
+        H.xlength = 5;
+        H.ylength = 2;
+    }
+
     custom() {
         H.geometry = document.querySelector('input[name="arrange"]:checked').value;
         H.xlength = document.getElementById('length').value;
