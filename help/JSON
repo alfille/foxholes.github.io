@@ -1,0 +1,111 @@
+# JSON format for game
+
+*Documentation of the file format for **Foxhole** game data*
+
+## Background
+
+The foxhole game was first proposed by my friend DSK.
+
+![](images/foz-puzzle.jpeg)
+
+The playable version is found [here](https:/github.com/alfille/foxholes.github.io/index.html)
+
+As you can see, the games has greatly expanded in options and possible customization.
+
+One hope is to be able to save and share game setups and play. That's the purpose of this JSON file format.
+
+## Format
+The format is strictly [JSON](https://www.json.org/json-en.html) compatible syntax. That includes no trailing commas.
+### JSON
+JSON has a
+
+`key:value`
+ 
+format (where values can be strings, numbers or other JSON entries i.e. nesting) as well as comma separated additional entries.
+
+### Fields
+
+* length
+* width
+* offset
+* visits
+* geometry
+* poison_days
+* moves
+* solved
+* 
+### Values
+
+Values can be (based on context)
+
+* numeric
+* "string"
+* true/false
+* [array]
+
+
+### Extra data
+
+Known fields are used. Extra fields are ignored.
+
+## Solver
+
+The [solver programs](https://github.com/alfille/foxholes) can generate a JSON file, but not read one. If there is a solution, a "solved" field and "moves" field (with arrays of arrays of moves) are included.
+
+`foxholes_solver -l5 -w1 -g "grid" -j outputfile.json`
+ 
+is an example of the stanard game. 
+
+## Web App
+
+The playable game and both read and write json files. Found in the "Game" section
+
+![Game](images/game.png)
+
+![File](images/file.png)
+
+### Parser
+
+* The solve uses a custom C-based JSON output.
+* The Game uses javascript's built-in JSON capabilities
+* 
+### Verification
+
+Input files to the game are checked for JSON syntax and bounds or value checking of the value fields
+
+Missing fields are given default or current values
+
+## Examples
+The standard linear 5 fox game. (The game shown in the graphic above)
+
+```
+{"length":5,"width":1,"visits":1,"offset":false,"geometry":"grid","poison_days":0}
+```
+
+which can be better formatted as:
+
+```
+{
+  "length":5,
+  "width":1,
+  "visits"1,
+  "offset":false,
+  "geometry":"grid",
+  "poison_days":0
+}
+```
+
+After some moves:
+
+```
+{
+  "length":5,
+  "width":1,
+  "visits"1,
+  "offset":false,
+  "geometry":"grid",
+  "poison_days":0
+  "moves":[[0],[2],[1],[2],[0],[4],[3]]
+}
+```
+
