@@ -13,13 +13,14 @@ class Holes { // all geometry info
         this.ylength = 1; // for more complex shapes
         this.xlength = 5 ;
         this.geometry = "grid" ;
-        this.offset = false;
-
+        this.visits = 1 ;
+        this.poison_days = 0 ;
+        this.connection = "rectangular" ;
     }
 
     status() {
         document.getElementById("line1").innerHTML =
-        `${this.xlength} long &times; ${this.ylength} wide arranged in ${this.real_offset?"an offset ":"a "}${H.geometry}`;
+        `${this.xlength} long &times; ${this.ylength} wide arranged in a ${H.geometry}. Jumps are ${this.show_connection()}`;
         document.getElementById("line2").innerHTML =
         `Inspect ${this.visits} hole${this.visits==1?"":"s"}/day`;
         document.getElementById("line3").innerHTML =
@@ -32,7 +33,7 @@ class Holes { // all geometry info
         this.geometry    = Cookie.get("geometry") ;
         this.visits      = Cookie.get("visits") ;
         this.poison_days = Cookie.get("poison_days") ;
-        this.offset      = Cookie.get("offset") ;
+        this.connection  = Cookie.get("connection") ;
     }
     
     validate() {
@@ -41,7 +42,7 @@ class Holes { // all geometry info
         this.geometry    = this.checkS( this.geometry   , ["circle","grid","triangle"], "grid" ) ;
         this.visits      = this.checkI( this.visits     , 1, 10, 1 ) ;
         this.poison_days = this.checkI( this.poison_days, 0, 7, 0 ) ;
-        this.offset      = this.checkB( this.offset     , false ) ;
+        this.connection  = this.checkS( this.connection , ["rectangular","hexagonal","octagonal"], "rectangular" ) ;
         if ( this.visits > this.total ) {
             // can't visit more than the total number of holes
             this.visits = this.total ;
@@ -117,8 +118,35 @@ class Holes { // all geometry info
     }
     
     get real_offset() { // only if offset and thick
-        return this.offset && (this.ylength>1) ;
+        return this.connection=='hexagonal' && (this.ylength>1) ;
     }
+
+    show_geometry() {
+        switch( this.geometry ) {
+            case "grid":
+                return "grid";
+            case "circle":
+                return "circle";
+            case "triangle":
+                return "triangle";
+            default:
+                return "unknown";
+            }
+    }
+
+    show_connection() {
+        switch ( this.connection ) {
+            case 'rectangular':
+                return "rectangular" ;
+            case 'octagonal':
+                return "octagonal" ;
+            case 'hexagonal':
+                return "hexagonal";
+            default:
+                return "unknown";
+            }
+    }
+
 }
 H = new Holes() ;
 
@@ -323,7 +351,7 @@ class GardenView_Triangle extends GardenView {
     }
 }
 
-class GardenView_OffsetTriangle extends GardenView {
+class GardenView_HexTriangle extends GardenView {
     configure() {
         let f = G.foxes ;
         this.vb = { // svg viewBox dimensions
@@ -371,7 +399,7 @@ class GardenView_Circle extends GardenView {
     }
 }
 
-class GardenView_OffsetCircle extends GardenView {
+class GardenView_HexCircle extends GardenView {
     configure() {
         let f = G.foxes ; // to get a "foxes" long array, we don't actually use the data now
 
@@ -419,7 +447,7 @@ class GardenView_Grid extends GardenView {
     }
 }
 
-class GardenView_OffsetGrid extends GardenView {
+class GardenView_HexGrid extends GardenView {
     configure() {
         let f = G.foxes ;
         this.vb = { // svg viewBox dimensions
@@ -777,21 +805,34 @@ class Game_Triangle extends Game {
         Game.triset() ; // set up row ends
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
             let [ lo,hi ] = Game.trisplit( holes ) ;
-            this.fox_moves.push(
-                Game.limit_neighbors(lo,hi+1)
-                    .map(l=>[l,hi])
-                    .concat( Game.limit_neighbors(hi,H.xlength).map(h=>[lo,h]).filter(([ll,hh])=> ll<=hh) )
-                    .map( ([ll,hh])=> Game.tricombine( ll, hh ) )
-                ) ;
+            if ( H.connection=="rectangular" ) {
+                this.fox_moves.push(
+                    [[-1,0],[0,-1],[0,1],[1,0],]
+                    .map( ([l,h])=>[lo+l,hi+h] )
+                    .filter(([l,h])=>(l>=0)&&(h>=0))
+                    .filter(([l,h])=>(h<H.ylength))
+                    .filter( ([l,h])=>(l<=h))
+                    .map( ([l,h])=> Game.tricombine( l, h ) )
+                    ) ;
+            } else { // octagonal
+                this.fox_moves.push(
+                    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1],]
+                    .map( ([l,h])=>[lo+l,hi+h] )
+                    .filter(([l,h])=>(l>=0)&&(h>=0))
+                    .filter(([l,h])=>(h<H.ylength))
+                    .filter( ([l,h])=>(l<=h))
+                    .map( ([l,h])=> Game.tricombine( l, h ) )
+                    ) ;
+            }
         }
     }
 }
 
-class Game_OffsetTriangle extends Game {
+class Game_HexTriangle extends Game {
    constructor() {
         super() ;
         TV = new TableView() ;
-        GV = new GardenView_OffsetTriangle() ;
+        GV = new GardenView_HexTriangle() ;
 
         Game.triset() ; // set up row ends
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
@@ -813,19 +854,30 @@ class Game_Circle extends Game {
 
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
             let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-            this.fox_moves.push( Game.wrap_neighbors(lo,H.xlength).map(l=>[l,hi])
-                .concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
-                .map( ([ll,hh])=> Game.combine( ll, hh, H.xlength ) )
-                );
+            if ( H.connection=="rectangular" ) {
+                this.fox_moves.push(
+                    [[-1,0],[0,-1],[0,1],[1,0],]
+                    .map( ([l,h])=>[Game.wrap(lo+l,H.xlength),hi+h] )
+                    .filter(([l,h])=>(h>=0)&&(h<H.ylength))
+                    .map( ([l,h])=> Game.combine( l, h, H.xlength) )
+                    ) ;
+            } else { // octagonal
+                this.fox_moves.push(
+                    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1],]
+                    .map( ([l,h])=>[Game.wrap(lo+l,H.xlength),hi+h] )
+                    .filter(([l,h])=>(h>=0)&&(h<H.ylength))
+                    .map( ([l,h])=> Game.combine( l, h, H.xlength) )
+                    ) ;
+            }
         }
     }
 }
 
-class Game_OffsetCircle extends Game {
+class Game_HexCircle extends Game {
    constructor() {
         super() ;
         TV = new TableView() ;
-        GV = new GardenView_OffsetCircle() ;
+        GV = new GardenView_HexCircle() ;
 
         for ( let holes = 0 ; holes<H.total ; holes++ ) {
             let [ lo,hi ] = Game.split( holes, H.xlength ) ;
@@ -846,21 +898,32 @@ class Game_Grid extends Game {
         
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
             let [ lo,hi ] = Game.split( holes, H.xlength ) ;
-            this.fox_moves.push(
-                Game.limit_neighbors(lo,H.xlength)
-                    .map(l=>[l,hi])
-                    .concat( Game.limit_neighbors(hi,H.ylength).map(h=>[lo,h]) )
+            if ( H.connection=="rectangular" ) {
+                this.fox_moves.push(
+                    [[-1,0],[0,-1],[0,1],[1,0],]
+                    .map( ([l,h])=>[lo+l,hi+h] )
+                    .filter( ([l,h])=>(l>=0)&&(l<H.xlength))
+                    .filter(([l,h])=>(h>=0)&&(h<H.ylength))
                     .map( ([l,h])=> Game.combine( l, h, H.xlength) )
-                ) ;
+                    ) ;
+            } else { // octagonal
+                this.fox_moves.push(
+                    [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1],]
+                    .map( ([l,h])=>[lo+l,hi+h] )
+                    .filter( ([l,h])=>(l>=0)&&(l<H.xlength))
+                    .filter(([l,h])=>(h>=0)&&(h<H.ylength))
+                    .map( ([l,h])=> Game.combine( l, h, H.xlength) )
+                    ) ;
+            }
         }
     }
 }
 
-class Game_OffsetGrid extends Game {
+class Game_HexGrid extends Game {
    constructor() {
         super() ;
         TV = new TableView() ;
-        GV = new GardenView_OffsetGrid() ;
+        GV = new GardenView_HexGrid() ;
 
         for ( let holes = 0 ; holes<H.total ; ++holes ) {
             let [ lo,hi ] = Game.split( holes, H.xlength ) ;
@@ -916,7 +979,7 @@ class Overlay {
         H.poison_days = 0;
         H.xlength = 5;
         H.ylength = 1;
-        H.offset = false;
+        H.connection = 'rectangular';
     }
 
     circle () {
@@ -925,7 +988,7 @@ class Overlay {
         H.poison_days = 0;
         H.xlength = 5;
         H.ylength = 1;
-        H.offset = false;
+        H.connection = 'rectangular';
     }
 
     poison() {
@@ -934,7 +997,7 @@ class Overlay {
         H.poison_days = 1;
         H.xlength = 5;
         H.ylength = 1;
-        H.offset = false;
+        H.connection = 'rectangular';
     }
 
     grid() {
@@ -943,6 +1006,7 @@ class Overlay {
         H.poison_days = 0;
         H.xlength = 5;
         H.ylength = 2;
+        H.connection = 'rectangular';
     }
 
     triangle() {
@@ -951,6 +1015,7 @@ class Overlay {
         H.poison_days = 0;
         H.xlength = 5;
         H.ylength = 2;
+        H.connection = 'rectangular';
     }
 
     custom() {
@@ -959,7 +1024,7 @@ class Overlay {
         H.ylength = document.getElementById('width').value;
         H.visits = document.getElementById("holesper").value ;
         H.poison_days = document.getElementById("poisoneddays").value
-        H.offset = document.getElementById("offset").checked;
+        H.connection = document.querySelector('input[name="connect"]:checked').value;
         H.validate(); // check values
     }
 
@@ -979,22 +1044,22 @@ class Overlay {
         document.getElementById("holesper").value = H.visits;
         Cookie.set("visits", H.visits );
 
-        // offset
-        document.getElementById("offset").checked = H.offset;
-        Cookie.set("offset", H.offset );
+        // connection
+        document.querySelectorAll('input[name="connect"]').forEach( a => a.checked=(a.value==H.connection) );
+        Cookie.set("connection", H.connection );
 
 
         // geometry
         switch (H.geometry) {
             case "triangle":
-                document.getElementById("rarrange").innerHTML = `The ${H.xlength} foxholes are arranged in a ${H.real_offset?" offset":""} triangle.`;
+                document.getElementById("rarrange").innerHTML = `The ${H.xlength} foxholes are arranged in a triangle. Holes are connected as a ${H.show_connection()}.`;
                 break;
             case "circle":
-                document.getElementById("rarrange").innerHTML = `The ${H.xlength} foxholes are arranged in a${H.ylength>1?" thicker":""} ${H.real_offset?" offset":""} circle.`;
+                document.getElementById("rarrange").innerHTML = `The ${H.xlength} foxholes are arranged in a${H.ylength>1?" thicker":""} circle. Holes are connected as a ${H.show_connection()}.`;
                 break;
             case "grid":
             default:
-                document.getElementById("rarrange").innerHTML = `The ${H.xlength} fox holes are arranged in a${H.ylength>1?" thicker":""} ${H.real_offset?" offset":""} line. The fox cannot move past the edges.`;
+                document.getElementById("rarrange").innerHTML = `The ${H.xlength} fox holes are arranged in a${H.ylength>1?" thicker":""} line. Holes are connected as a ${H.show_connection()}. The fox cannot move past the edges.`;
                 break;
             }
         document.querySelectorAll('input[name="arrange"]').forEach( a => a.checked=(a.value==H.geometry) );
@@ -1090,14 +1155,41 @@ class Overlay {
         this.view = "game" ;
         switch( H.geometry ) {
             case "triangle":
-                G = H.offset? new Game_OffsetTriangle() : new Game_Triangle() ;
+                switch ( H.connection ) {
+                    case 'rectangular':
+                    case 'octagonal':
+                        G = new Game_Triangle() ;
+                        break ;
+                    case 'hexagonal':
+                    default:
+                        G = new Game_HexTriangle() ;
+                        break
+                    }
                 break ;
             case "circle":
-                G = H.offset? new Game_OffsetCircle() : new Game_Circle() ;
+                switch ( H.connection ) {
+                    case 'rectangular':
+                    case 'octagonal':
+                        G = new Game_Circle() ;
+                        break ;
+                    case 'hexagonal':
+                    default:
+                        G = new Game_HexCircle() ;
+                        break
+                    }
                 break ;
             case "grid":
             default:
-                G = H.offset ? new Game_OffsetGrid() : new Game_Grid() ;
+                switch ( H.connection ) {
+                    case 'rectangular':
+                    case 'octagonal':
+                        G = new Game_Grid() ;
+                        break ;
+                    case 'hexagonal':
+                    default:
+                        G = new Game_HexGrid() ;
+                        break
+                    }
                 break ;
             }
         H.status();
@@ -1163,7 +1255,7 @@ class Drag {
     static validate( obj ) {
         document.getElementById("loadstatus").innerText="Checking...";
         let changed = false ;
-        [ ['length','xlength'], ['width','ylength'], 'visits', 'poison_days', 'offset', 'geometry' ]
+        [ ['length','xlength'], ['width','ylength'], 'visits', 'poison_days', 'connection', 'geometry' ]
         .forEach( (I) => {
             let k = I;
             let h = I;
@@ -1196,7 +1288,7 @@ class Drag {
             length: H.xlength,
             width: H.ylength,
             visits: H.visits,
-            offset: H.offset,
+            connection: H.connection,
             geometry: H.geometry,
             poison_days: H.poison_days,
         }
