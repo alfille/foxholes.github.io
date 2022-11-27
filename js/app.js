@@ -51,6 +51,7 @@ class Holes { // all geometry info
             // ylength not used in triangle
             this.ylength = this.xlength ;
         }
+        console.log("Validated");
     }
     
     checkI( x, lo, hi, def ) {
@@ -1268,10 +1269,12 @@ class Drag {
                 H[h] = obj[k] ;
             }
         });
+        //console.log(changed,H);
         if ( changed ) {
             document.getElementById("loadstatus").innerText="Starting loaded game...";
             H.validate();
-            O.newgame() ;
+            O.fillin();
+            O.newgame();
             if ( 'moves' in obj ) {
                 let t = H.total ;
                 if ( obj.moves.every( m => m.every( mm => (mm>=0) && (mm<t) ) ) ) { 

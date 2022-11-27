@@ -27,7 +27,7 @@ format (where values can be strings, numbers or other JSON entries i.e. nesting)
 
 * length
 * width
-* offset
+* connection
 * visits
 * geometry
 * poison_days
@@ -79,7 +79,7 @@ Missing fields are given default or current values
 The standard linear 5 fox game. (The game shown in the graphic above)
 
 ```
-{"length":5,"width":1,"visits":1,"offset":false,"geometry":"grid","poison_days":0}
+{"length":5,"width":1,"visits":1,"connection":"rectangular",geometry":"grid","poison_days":0}
 ```
 
 which can be better formatted as:
@@ -89,7 +89,7 @@ which can be better formatted as:
   "length":5,
   "width":1,
   "visits"1,
-  "offset":false,
+  "connection":"rectangular",
   "geometry":"grid",
   "poison_days":0
 }
@@ -102,7 +102,7 @@ After some moves:
   "length":5,
   "width":1,
   "visits"1,
-  "offset":false,
+  "connection":"rectangular",
   "geometry":"grid",
   "poison_days":0
   "moves":[[0],[2],[1],[2],[0],[4],[3]]
